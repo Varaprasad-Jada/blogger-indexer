@@ -103,7 +103,6 @@
     async function submitIndexing() {
       const urlInput = document.getElementById('postUrl').value.trim();
       const apiKey = document.getElementById('apiKey').value.trim();
-      const statusDiv = document.getElementById('status');
 
       if (!urlInput) {
         showStatus('Please enter a valid Blogger post URL.', 'error');
@@ -116,7 +115,7 @@
         const parsedUrl = new URL(urlInput);
         const host = parsedUrl.hostname;
 
-        // 1. Submit to IndexNow API (Bing / Yahoo)
+        // 1. Submit to IndexNow API (Bing / Yahoo) with no-cors mode
         if (apiKey) {
           const payload = {
             host: host,
@@ -125,19 +124,21 @@
             urlList: [urlInput]
           };
 
-          await fetch('https://api.indexnow.org/indexnow', {
+          // 'no-cors' mode bypasses browser blocking for cross-origin requests
+          fetch('https://api.indexnow.org/indexnow', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=utf-8' },
+            mode: 'no-cors',
             body: JSON.stringify(payload)
           });
         }
 
-        // 2. Ping Google Sitemap Endpoint via a transparent image request
+        // 2. Trigger Google Sitemap Ping using an invisible image loader
         const googlePingUrl = `https://www.google.com/ping?sitemap=https://${host}/sitemap.xml`;
         const img = new Image();
         img.src = googlePingUrl;
 
-        showStatus('Success! Sent IndexNow signal and pinged Google Sitemap queue.', 'success');
+        showStatus('Success! Signal sent to IndexNow & Google Sitemap queue pinged.', 'success');
       } catch (err) {
         showStatus('Error: ' + err.message, 'error');
       }
